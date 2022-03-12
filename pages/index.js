@@ -15,15 +15,28 @@ function Index() {
 				chain: "eth",
 				address: search,
 			});
+			console.log(NFTs);
 			const results = NFTs.result;
 			console.log(results);
 
-			results.forEach(async ({ metadata }) => {
-				try {
-					const url = await JSON.parse(metadata);
-					setNFTArray((pre) => [...pre, url]);
-				} catch (err) {
-					console.log("Error:" + err);
+			results.forEach(async (result) => {
+				const isMetaData = result.metadata != null || result.metadata != undefined;
+
+				if (isMetaData) {
+					try {
+						const url = await JSON.parse(result.metadata);
+						setNFTArray((pre) => [...pre, url]);
+					} catch (err) {
+						console.log("Error:" + err);
+					}
+				} else {
+					try {
+						const uri = await fetch(result.token_uri);
+						const url = await uri.json();
+						setNFTArray((pre) => [...pre, url]);
+					} catch (err) {
+						console.log("Error:" + err);
+					}
 				}
 			});
 		} catch (err) {
@@ -46,17 +59,18 @@ function Index() {
 				}}
 			/>
 			<button onClick={fetchNFTs}>GetNFTs</button>
+			<button onClick={() => setNFTArray([])}>Reset</button>
 			<br />
 			{nftArray &&
 				nftArray.map((metadata, index) => (
 					<Image
 						key={index}
-						src={`/api/proxy?url=${encodeURIComponent(metadata.image)}`}
+						src={`/api/proxy?url=${encodeURIComponent(metadata?.image)}`}
 						width="400px"
 						height="400px"
 						objectFit="cover"
 						quality={80}
-						alt={metadata.name}
+						alt={metadata?.name}
 					/>
 				))}
 		</>
